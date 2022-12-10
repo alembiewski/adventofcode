@@ -20,6 +20,9 @@ const (
 	UpperDir       = ".."
 )
 
+var totalSum int
+var dirSizes []int
+
 type File struct {
 	IsDir    bool
 	Name     string
@@ -35,58 +38,6 @@ func stringToInt(s string) int {
 		os.Exit(1)
 	}
 	return i
-}
-
-var totalSum int
-var dirSizes []int
-
-func main() {
-	handleFile, err := os.ReadFile("./input.txt")
-	if err != nil {
-		fmt.Println("File reading error", err)
-		return
-	}
-
-	root := File{true, RootFolder, nil, []*File{}, 0}
-	// assuming current dir is "/"
-	curDir := &root
-	for i, line := range strings.Split(string(handleFile), "\n") {
-		if line == "" || i == 0 {
-			continue
-		}
-		fmt.Printf("curDir: %s\n", buildPath(curDir))
-		fmt.Println(line)
-		commandLine := strings.Split(line, " ")
-		if strings.HasPrefix(line, CommandSign) {
-			command := commandLine[1]
-			switch command {
-			case LsCommand:
-				// do nothing
-			case CdCommand:
-				curDir = cd(commandLine, curDir)
-			}
-		} else {
-			processFile(commandLine, curDir)
-		}
-	}
-	totalUsed := iterateDir(&root)
-	// Part 1
-	fmt.Println("-------------------")
-	fmt.Printf("Part 1: %d\n", totalSum)
-
-	// Part 2
-	fmt.Println("-------------------")
-	totalUnused := TotalDiskSpace - totalUsed
-	fmt.Printf("Currently free: %d\n", totalUnused)
-	spaceNeeded := DiskRequired - totalUnused
-	fmt.Printf("Space needed: %d\n", spaceNeeded)
-	sort.Ints(dirSizes)
-	for _, size := range dirSizes {
-		if size >= spaceNeeded {
-			fmt.Printf("Part 2. Size of the folder to remove: %d\n", size)
-			break
-		}
-	}
 }
 
 func processFile(commandLine []string, curDir *File) {
@@ -157,4 +108,53 @@ func buildPath(f *File) string {
 		return path
 	}
 	return ""
+}
+
+func main() {
+	file, err := os.ReadFile("./input.txt")
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return
+	}
+
+	root := File{true, RootFolder, nil, []*File{}, 0}
+	// assuming current dir is "/"
+	curDir := &root
+	for i, line := range strings.Split(string(file), "\n") {
+		if line == "" || i == 0 {
+			continue
+		}
+		fmt.Printf("curDir: %s\n", buildPath(curDir))
+		fmt.Println(line)
+		commandLine := strings.Split(line, " ")
+		if strings.HasPrefix(line, CommandSign) {
+			command := commandLine[1]
+			switch command {
+			case LsCommand:
+				// do nothing
+			case CdCommand:
+				curDir = cd(commandLine, curDir)
+			}
+		} else {
+			processFile(commandLine, curDir)
+		}
+	}
+	totalUsed := iterateDir(&root)
+	// Part 1
+	fmt.Println("-------------------")
+	fmt.Printf("Part 1: %d\n", totalSum)
+
+	// Part 2
+	fmt.Println("-------------------")
+	totalUnused := TotalDiskSpace - totalUsed
+	fmt.Printf("Currently free: %d\n", totalUnused)
+	spaceNeeded := DiskRequired - totalUnused
+	fmt.Printf("Space needed: %d\n", spaceNeeded)
+	sort.Ints(dirSizes)
+	for _, size := range dirSizes {
+		if size >= spaceNeeded {
+			fmt.Printf("Part 2. Size of the folder to remove: %d\n", size)
+			break
+		}
+	}
 }
